@@ -42,7 +42,7 @@ def swagger_route_handler(arn):
                 "httpMethod": "POST",
                 
                 "requestParameters" : {
-                    "integration.request.body.input" : "method.request.body.input"
+                    "integration.request.querystring.input" : "method.request.querystring.input"
                     # "integration.request.querystring.stage" : "method.request.querystring.version",
                     # "integration.request.header.x-userid" : "method.request.header.x-user-id",
                     # "integration.request.path.op" : "method.request.path.service"
