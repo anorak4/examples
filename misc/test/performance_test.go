@@ -3,6 +3,7 @@
 package test
 
 import (
+	"fmt"
 	"log"
 	"os"
 	"path"
@@ -85,6 +86,20 @@ func TestAccAwsJsS3Folder(t *testing.T) {
 	integration.ProgramTest(t, &test)
 }
 
+func TestAccAwsTsS3Folder(t *testing.T) {
+	benchmark := bench("aws-ts-s3-folder", "aws", "nodejs", "ts")
+	opts := integration.ProgramTestOptions{
+		Dir: path.Join(getCwd(t), "..", "..", benchmark.Name),
+		ExtraRuntimeValidation: func(t *testing.T, stack integration.RuntimeValidationStackInfo) {
+			assertHTTPResult(t, "http://"+stack.Outputs["websiteUrl"].(string), nil, func(body string) bool {
+				return assert.Contains(t, body, "Hello, Pulumi!")
+			})
+		},
+	}
+	test := getAWSBase(t).With(opts).With(benchmark.ProgramTestOptions())
+	integration.ProgramTest(t, &test)
+}
+
 func TestAccAwsPyS3Folder(t *testing.T) {
 	benchmark := bench("aws-py-s3-folder", "aws", "python", "python")
 	opts := integration.ProgramTestOptions{
@@ -97,6 +112,69 @@ func TestAccAwsPyS3Folder(t *testing.T) {
 	}
 	test := getAWSBase(t).With(opts).With(benchmark.ProgramTestOptions())
 	integration.ProgramTest(t, &test)
+}
+
+type manyResourcesConfig struct {
+	folder       string
+	bench        traces.Benchmark
+	resources    int
+	payloadBytes int
+}
+
+func TestManyResources(t *testing.T) {
+	var configurations []manyResourcesConfig
+
+	for _, resources := range []int{64, 128, 256} {
+		confs := []manyResourcesConfig{
+			{
+				folder:       "go-many-resources",
+				bench:        bench(fmt.Sprintf("go-many-resources-%d", resources), "", "go", "go"),
+				resources:    resources,
+				payloadBytes: 8,
+			},
+			{
+				folder:       "cs-many-resources",
+				bench:        bench(fmt.Sprintf("cs-many-resources-%d", resources), "", "dotnet", "csharp"),
+				resources:    resources,
+				payloadBytes: 8,
+			},
+			{
+				folder:       "ts-many-resources",
+				bench:        bench(fmt.Sprintf("ts-many-resources-%d", resources), "", "nodejs", "typescript"),
+				resources:    resources,
+				payloadBytes: 8,
+			},
+			{
+				folder:       "py-many-resources",
+				bench:        bench(fmt.Sprintf("py-many-resources-%d", resources), "", "python", "python"),
+				resources:    resources,
+				payloadBytes: 8,
+			},
+		}
+		configurations = append(configurations, confs...)
+	}
+
+	check := func(t *testing.T, cfg manyResourcesConfig) {
+		opts := integration.ProgramTestOptions{
+			Dir: path.Join(getCwd(t), "..", "benchmarks", cfg.folder),
+			Config: map[string]string{
+				"resource_count":         fmt.Sprintf("%d", cfg.resources),
+				"resource_payload_bytes": fmt.Sprintf("%d", cfg.payloadBytes),
+			},
+			ExtraRuntimeValidation: func(t *testing.T, stack integration.RuntimeValidationStackInfo) {
+				assert.Equal(t, float64(cfg.resources), stack.Outputs["ResourceCount"])
+				assert.Equal(t, float64(cfg.payloadBytes), stack.Outputs["ResourcePayloadBytes"])
+			},
+		}
+		test := getBaseOptions(t).With(opts).With(cfg.bench.ProgramTestOptions())
+		integration.ProgramTest(t, &test)
+	}
+
+	for _, cfg := range configurations {
+		t.Run(cfg.bench.Name, func(t *testing.T) {
+			check(t, cfg)
+		})
+	}
 }
 
 func TestMain(m *testing.M) {

@@ -135,7 +135,7 @@ jobs:
         curl https://raw.githubusercontent.com/helm/helm/master/scripts/get-helm-3 | bash
         helm repo add bitnami https://charts.bitnami.com/bitnami
     - name: Configure GCP credentials
-      uses: GoogleCloudPlatform/github-actions/setup-gcloud@master
+      uses: google-github-actions/setup-gcloud@master
       with:
         project_id: ${{ env.GOOGLE_PROJECT }}
         service_account_email: ${{ secrets.GCP_SA_EMAIL }}
@@ -254,7 +254,7 @@ jobs:
         curl https://raw.githubusercontent.com/helm/helm/master/scripts/get-helm-3 | bash
         helm repo add bitnami https://charts.bitnami.com/bitnami
     - name: Configure GCP credentials
-      uses: GoogleCloudPlatform/github-actions/setup-gcloud@master
+      uses: google-github-actions/setup-gcloud@master
       with:
         project_id: ${{ env.GOOGLE_PROJECT }}
         service_account_email: ${{ secrets.GCP_SA_EMAIL }}
@@ -386,7 +386,7 @@ jobs:
         curl https://raw.githubusercontent.com/helm/helm/master/scripts/get-helm-3 | bash
         helm repo add bitnami https://charts.bitnami.com/bitnami
     - name: Configure GCP credentials
-      uses: GoogleCloudPlatform/github-actions/setup-gcloud@master
+      uses: google-github-actions/setup-gcloud@master
       with:
         project_id: ${{ env.GOOGLE_PROJECT }}
         service_account_email: ${{ secrets.GCP_SA_EMAIL }}
@@ -469,7 +469,7 @@ jobs:
         curl https://raw.githubusercontent.com/helm/helm/master/scripts/get-helm-3 | bash
         helm repo add bitnami https://charts.bitnami.com/bitnami
     - name: Configure GCP credentials
-      uses: GoogleCloudPlatform/github-actions/setup-gcloud@master
+      uses: google-github-actions/setup-gcloud@master
       with:
         project_id: ${{ env.GOOGLE_PROJECT }}
         service_account_email: ${{ secrets.GCP_SA_EMAIL }}
@@ -527,10 +527,8 @@ jobs:
     - uses: actions/checkout@v2
     - run: |-
         npm install
-        npm install --global mocha
-        npm install --global ts-node
-        mocha -r ts-node/register ec2tests.ts
-      working-directory: ${{ matrix.source-dir }}
+        $(npm bin)/mocha -r ts-node/register ec2tests.ts
+      working-directory: ${{ matrix.source-dir }}/mocha
     strategy:
       fail-fast: false
       matrix:
